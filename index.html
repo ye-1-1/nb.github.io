@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>柿·窗</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+<style>
+  body{margin:0;background:#1a1a1a;display:flex;justify-content:center;align-items:center;height:100vh;}
+  #ctrl{position:absolute;left:2%;top:2%;color:#fff;font-size:14px;background:rgba(0,0,0,.4);padding:10px;border-radius:6px;}
+  #ctrl input{width:60px;margin:0 6px;}
+  #ctrl button{padding:4px 10px;}
+</style>
+</head>
+<body>
+<div id="ctrl">
+  <label>网格密度
+    <input id="eqInput" type="number" min="1" max="40" value="8">
+  </label>
+  <button onclick="updateGrid()">更新网格</button>
+  <p style="margin:6px 0 0;font-size:12px;opacity:.7">按 Enter 也可更新</p>
+</div>
+<script>
+/* ----------- 你的完整 p5 代码 ----------- */
+let rectangles=[],ellipses=[],rot_rectangles=[];
+let EQ=8,angle=0;
+
+function setup(){
+  let c=createCanvas(windowHeight,windowHeight);
+  angleMode(DEGREES);
+  document.getElementById('eqInput').addEventListener('keyup',e=>{if(e.key==='Enter')updateGrid()});
+  generateGrid();
+}
+
+function updateGrid(){
+  let v=int(document.getElementById('eqInput').value);
+  if(isNaN(v)||v<1)v=1; if(v>40)v=40;
+  document.getElementById('eqInput').value=v;
+  EQ=v; generateGrid();
+}
+
+function generateGrid(){
+  rectangles=[]; ellipses=[]; rot_rectangles=[];
+  let step=width/EQ;
+  for(let y=0;y<height;y+=step){
+    for(let x=0;x<width;x+=step){
+      rectangles.push(new Rect(x,y));
+      ellipses.push(new Elli(x,y));
+      rot_rectangles.push(new RotaRect(x,y));
+    }
+  }
+}
+
+function draw(){
+  background(195,155,220);
+  rectangles.forEach(r=>{r.show(); r.chamferChange();});
+  ellipses.forEach(e=>{e.show(); e.grow();});
+  rot_rectangles.forEach(t=>{t.show(); t.spin(); t.change();});
+  /* 边框 */
+  push();
+  noFill(); stroke(120,50,50,150); strokeWeight(5);
+  rect(2.5,2.5,width-5,height-5);
+  pop();
+}
+
+/* ---------- 类定义 ---------- */
+class Rect{
+  constructor(x,y){
+    this.x=x; this.y=y;
+    this.step=width/EQ;
+    this.ch=(this.step)/16;
+    this.chSp=1/EQ*3;
+  }
+  show(){
+    fill(252,230,221); stroke(0,120,0); strokeWeight(1);
+    rect(this.x,this.y,this.step,this.step,this.ch);
+  }
+  chamferChange(){
+    this.ch+=this.chSp;
+    if(this.ch>=this.step/2||this.ch<=this.step/32)this.chSp*=-1;
+  }
+}
+
+class Elli{
+  constructor(x,y){
+    this.x=x+width/EQ/2; this.y=y+height/EQ/2;
+    this.w=this.h=width/EQ-2;
+    this.inc=1/EQ*3;
+  }
+  show(){
+    fill(255,125,150,50); stroke(0,120,0); strokeWeight(1);
+    ellipse(this.x,this.y,this.w,this.h);
+  }
+  grow(){
+    this.w+=this.inc; this.h+=this.inc;
+    if(this.w>=width/EQ*2||this.w<=width/EQ*.95)this.inc*=-1;
+  }
+}
+
+class RotaRect{
+  constructor(x,y){
+    this.x=x+width/EQ/2; this.y=y+height/EQ/2;
+    this.size=width/EQ*.3; this.inc=1/EQ*3;
+    this.ch=width/EQ/16; this.chSp=1/EQ*3;
+    this.ang=0; this.sp=1;
+    this.col=color(random(255),random(255),random(255),25);
+  }
+  spin(){this.ang+=this.sp;}
+  change(){
+    this.size+=this.inc;
+    this.ch+=this.chSp;
+    if(this.size<=width/EQ*.2||this.size>=width/EQ*.5)this.inc*=-1;
+    if(this.ch>=width/EQ/8||this.ch<=width/EQ/32)this.chSp*=-1;
+  }
+  show(){
+    push();
+    translate(this.x,this.y); rotate(this.ang+45);
+    fill(this.col); stroke(0,120,0); strokeWeight(1); rectMode(CENTER);
+    rect(0,0,this.size,this.size,this.ch);
+    rect(this.size/2,this.size/2,this.size,this.size,this.ch);
+    rect(-this.size/2,this.size/2,this.size,this.size,this.ch);
+    rect(this.size/2,-this.size/2,this.size,this.size,this.ch);
+    rect(-this.size/2,-this.size/2,this.size,this.size,this.ch);
+    pop();
+  }
+}
+
+function windowResized(){resizeCanvas(windowHeight,windowHeight); generateGrid();}
+</script>
+</body>
+</html>
